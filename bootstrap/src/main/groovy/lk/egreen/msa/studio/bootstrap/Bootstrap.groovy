@@ -1,13 +1,22 @@
 package lk.egreen.msa.studio.bootstrap
 
+import lk.egreen.msa.studio.SampleApi
+import lk.egreen.msa.studio.bootstrap.transport.jaxrs.RestJaxRsApplication
+import lk.egreen.msa.studio.extender.ComponentScanner
+import org.glassfish.jersey.server.ResourceConfig
+import org.glassfish.jersey.servlet.ServletContainer
 import org.osgi.framework.BundleActivator
 import org.osgi.framework.BundleContext
+import org.osgi.framework.BundleEvent
+import org.osgi.framework.BundleListener
+import org.osgi.framework.FrameworkEvent
+import org.osgi.framework.FrameworkListener
 import org.osgi.framework.ServiceReference
 import org.osgi.service.http.HttpService
+import org.osgi.util.tracker.BundleTrackerCustomizer
 import org.osgi.util.tracker.ServiceTracker
 
 import javax.servlet.ServletException
-import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -24,11 +33,27 @@ class Bootstrap implements BundleActivator {
     @Override
     void start(BundleContext bundleContext) throws Exception {
         println('Hello world 123');
+
+
+        bundleContext.registerService(SampleApi.class, new SampleApi() {
+            @Override
+            void version(String code) {
+                println "Impliment version on bootstrap " + code
+
+            }
+        }, null);
+
+        // create a resource config that scans for JAX-RS resources and providers
+        // in com.example.rest package
+
+//        println bundleContext.getService(bundleContext.getServiceReference(HttpServiceExtension.class))
+
+
         httpTracker = new ServiceTracker(bundleContext, HttpService.class.getName(), null) {
             public void removedService(ServiceReference reference, Object service) {
                 println("HTTP service is available, unregister our servlet...")
                 try {
-                    ((HttpService) service).unregister("/version");
+                    ((HttpService) service).unregister("/rest");
                 } catch (IllegalArgumentException exception) {
                     // Ignore; servlet registration probably failed earlier on...
                 }
@@ -38,27 +63,44 @@ class Bootstrap implements BundleActivator {
                 print("HTTP service is available, register our servlet...")
                 HttpService httpService = (HttpService) this.context.getService(reference);
                 try {
-                    httpService.registerServlet("/version", new HttpServlet() {
-                        @Override
-                        protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                            resp.getWriter().write("Hello app post");
-                        }
 
+                    ServletContainer container = new ServletContainer(new RestJaxRsApplication(bundleContext)) {
                         @Override
                         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                            apiTracker.open()
-                            resp.getWriter().write("Hello app");
-
+                            println req.pathInfo
+                            super.doGet(req, resp)
                         }
-                    }, null, null);
+                    };
+                    Dictionary containerInitParameters = new Hashtable();
+//                    containerInitParameters.put("javax.ws.rs.Application","lk.egreen.msa.studio.bootstrap.SampleRestService.RestJaxRsApplication")
+                    containerInitParameters.put("jersey.config.server.tracing", "ALL")
+
+
+                    httpService.registerServlet("/rest", container, containerInitParameters, null);
+
+
+
+                    BundleTrackerCustomizer componetScanner=new ComponentScanner(bundleContext)
+                    componetScanner.open();
+
+
                 } catch (Exception exception) {
                     exception.printStackTrace();
                 }
                 return httpService;
             }
+
+
+
+
         }
 
+
         httpTracker.open();
+
+
+
+
 
 
 
