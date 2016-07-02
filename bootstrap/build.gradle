@@ -1,0 +1,48 @@
+apply plugin: 'java'
+apply plugin: 'groovy'
+apply plugin: 'osgi'
+//apply plugin: 'com.athaydes.osgi-ds'
+
+
+jar {
+    manifest {
+        attributes("Export-Package": "Gradle",
+                "Bundle-Activator": "lk.egreen.msa.studio.bootstrap.Bootstrap")
+    }
+}
+
+dependencies {
+
+    compile project(':core')
+
+    compile 'org.codehaus.groovy:groovy-all:2.4.5'
+
+//    compile 'com.google.code.findbugs:jsr305:3.0.1'
+    compile 'org.osgi:org.osgi.core:6.0.0'
+    compile 'org.osgi:org.osgi.service.component:1.3.0'
+    compile 'org.osgi:org.osgi.service.log:1.3.0'
+    //compile 'org.osgi:osgi.cmpn:6.0.0'
+
+    // https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.http.servlet-api
+    compile group: 'org.apache.felix', name: 'org.apache.felix.http.servlet-api', version: '1.1.2'
+
+    // https://mvnrepository.com/artifact/org.glassfish.grizzly.osgi/grizzly-httpservice
+    compile group: 'org.glassfish.grizzly.osgi', name: 'grizzly-httpservice', version: '2.3.25'
+
+    // https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.fileinstall
+    compile group: 'org.apache.felix', name: 'org.apache.felix.fileinstall', version: '3.5.4'
+
+    // https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload
+    compile group: 'commons-fileupload', name: 'commons-fileupload', version: '1.3'
+
+    // https://mvnrepository.com/artifact/org.json/json
+    compile group: 'org.json', name: 'json', version: '20070829'
+
+    // https://mvnrepository.com/artifact/org.apache.felix/org.apache.felix.webconsole
+    compile group: 'org.apache.felix', name: 'org.apache.felix.webconsole', version: '4.2.16'
+
+}
+
+//declarativeServices {
+//    declarations = project.file( 'src/main/osgi/declarativeServices.groovy' )
+//}

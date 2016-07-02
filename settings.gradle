@@ -1,0 +1,4 @@
+rootProject.name = 'studio'
+include 'bootstrap'
+include 'core'
+
