@@ -37,13 +37,12 @@ dependencies {
     // enable slf4j support
 //    osgiRuntime 'org.slf4j:osgi-over-slf4j:1.7.21'
 //    osgiRuntime 'org.slf4j:slf4j-api:1.7.21'
+    osgiRuntime 'org.codehaus.groovy:groovy-all:2.4.5'
 
     // OBR CLI commands
     osgiRuntime 'org.apache.felix:org.apache.felix.bundlerepository:2.0.6', {
         exclude group: '*'
     }
-
-
 
     // OSGi container
     osgiMain "org.apache.felix:org.apache.felix.main:5.4.0"
@@ -58,13 +57,13 @@ runOsgi {
     copyManifestTo 'generated-sources/MANIFEST.MF'
 
     // required by Groovy
-    config += [ 'org.osgi.framework.system.packages.extra': 'sun.reflect,jdk.nashorn.api.scripting' ]
+    config += ['org.osgi.framework.system.packages.extra': 'sun.reflect,jdk.nashorn.api.scripting']
 
     // no OSGi framework bundles should be deployed
-    excludedBundles = [ /osgi\..*/, /animal-sniffer.*/ ]
+    excludedBundles = [/osgi\..*/, /animal-sniffer.*/]
 
     wrapInstructions {
-        manifest( /commons-logging.*/ ) {
+        manifest(/commons-logging.*/) {
             instruction 'Import-Package', '!javax.servlet,!org.apache.*,*'
         }
     }

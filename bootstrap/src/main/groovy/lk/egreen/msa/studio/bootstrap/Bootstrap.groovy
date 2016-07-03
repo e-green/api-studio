@@ -2,6 +2,7 @@ package lk.egreen.msa.studio.bootstrap
 
 import lk.egreen.msa.studio.SampleApi
 import lk.egreen.msa.studio.bootstrap.transport.jaxrs.RestJaxRsApplication
+import lk.egreen.msa.studio.bootstrap.transport.jaxrs.RestServletContainer
 import lk.egreen.msa.studio.extender.ComponentScanner
 import org.glassfish.jersey.server.ResourceConfig
 import org.glassfish.jersey.servlet.ServletContainer
@@ -34,7 +35,7 @@ class Bootstrap implements BundleActivator {
     void start(BundleContext bundleContext) throws Exception {
         println('Hello world 123');
 
-
+//        final
         bundleContext.registerService(SampleApi.class, new SampleApi() {
             @Override
             void version(String code) {
@@ -50,6 +51,9 @@ class Bootstrap implements BundleActivator {
 
 
         httpTracker = new ServiceTracker(bundleContext, HttpService.class.getName(), null) {
+
+
+
             public void removedService(ServiceReference reference, Object service) {
                 println("HTTP service is available, unregister our servlet...")
                 try {
@@ -60,17 +64,14 @@ class Bootstrap implements BundleActivator {
             }
 
             public Object addingService(ServiceReference reference) {
-                print("HTTP service is available, register our servlet...")
+
+
+
+                println("HTTP service is available, register our servlet...")
                 HttpService httpService = (HttpService) this.context.getService(reference);
                 try {
-
-                    ServletContainer container = new ServletContainer(new RestJaxRsApplication(bundleContext)) {
-                        @Override
-                        protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                            println req.pathInfo
-                            super.doGet(req, resp)
-                        }
-                    };
+                    RestJaxRsApplication rsApplication = new RestJaxRsApplication(bundleContext);
+                    RestServletContainer container = new RestServletContainer(rsApplication)
                     Dictionary containerInitParameters = new Hashtable();
 //                    containerInitParameters.put("javax.ws.rs.Application","lk.egreen.msa.studio.bootstrap.SampleRestService.RestJaxRsApplication")
                     containerInitParameters.put("jersey.config.server.tracing", "ALL")
@@ -79,8 +80,8 @@ class Bootstrap implements BundleActivator {
                     httpService.registerServlet("/rest", container, containerInitParameters, null);
 
 
-
-                    BundleTrackerCustomizer componetScanner=new ComponentScanner(bundleContext)
+                    ComponentScanner componetScanner = new ComponentScanner(bundleContext)
+                    componetScanner.addProcessor(rsApplication);
                     componetScanner.open();
 
 
@@ -91,21 +92,9 @@ class Bootstrap implements BundleActivator {
             }
 
 
-
-
         }
 
-
         httpTracker.open();
-
-
-
-
-
-
-
-
-
 
         println("working");
     }
