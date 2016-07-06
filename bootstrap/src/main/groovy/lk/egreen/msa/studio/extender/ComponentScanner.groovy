@@ -24,7 +24,7 @@ class ComponentScanner implements BundleTrackerCustomizer {
 
     final BundleContext bundleContext;
 
-    final Map<ClassProcessor, List<Class<?>>> classProcessorList = new ConcurrentHashMap<>();
+    final Map<ClassProcessor, Set<Class<?>>> classProcessorList = new ConcurrentHashMap<>();
 
 
     public ComponentScanner(BundleContext bundleContext) {
@@ -35,10 +35,10 @@ class ComponentScanner implements BundleTrackerCustomizer {
 
     public void addProcessor(ClassProcessor processor) {
         LOGGER.info("New processor added " + processor)
-        List<Class<?>> classesSet = this.classProcessorList.get(processor);
+        Set<Class<?>> classesSet = this.classProcessorList.get(processor);
 
         if (classesSet == null) {
-            classesSet = new ArrayList<>();
+            classesSet = new HashSet<>();
         }
 
         this.classProcessorList.put(processor, classesSet);
@@ -47,61 +47,55 @@ class ComponentScanner implements BundleTrackerCustomizer {
 
     @Override
     public Object addingBundle(Bundle bundle, BundleEvent event) {
-//        if (event.getType() == BundleEvent.STARTED) {
-        // TODO : Add regex for component classes parsing
-        //        The demo code only works for one component class in MANIFEST.MF
-        // TODO: Add loop for classes
 
-//        System.out.println("Found a Bundle with a Service Component Classes : " + serviceComponentClasses);
-//        String fileName = "/" + serviceComponentClasses.replace('.', '/') + ".class";
+        def headers = bundle.getHeaders().get("Api-Studio");
+
+        if (headers != null && event.getType() == BundleEvent.STARTING) {
+
+            def classPool = ClassPool.default;
+            classPool.insertClassPath(new ClassClassPath(bundle.getBundleContext().class))
+            def entries = bundle.findEntries("/", "*.class", true);
 
 
-        def classPool = ClassPool.default;
-        classPool.insertClassPath(new ClassClassPath(bundle.getBundleContext().class))
-        def entries = bundle.findEntries("/", "*.class", true);
-
-        String[] fileNames = [];
-
-        for (URL fileName in entries) {
-
-//            println fileName.path;
+            for (URL fileName in entries) {
 
 //                // Scan the component class via byte code reading (javassist library is used)
 //                // more details about javassist see http://www.jboss.org/javassist/
-            URL componentClassUrl = bundle.getResource(fileName.path);
-            try {
-                InputStream componentClassInputStream = componentClassUrl.openStream();
-                DataInputStream dstream = new DataInputStream(componentClassInputStream);
-                CtClass ct = classPool.makeClass(dstream);
+                URL componentClassUrl = bundle.getResource(fileName.path);
+                try {
+                    InputStream componentClassInputStream = componentClassUrl.openStream();
+                    DataInputStream dstream = new DataInputStream(componentClassInputStream);
+                    CtClass ct = classPool.makeClass(dstream);
 
-                // DS Component name is the class name
-                String componentName = ct.getName();
-//                println "start processing" + classProcessorList.size()
-                for (ClassProcessor processor in classProcessorList.keySet()) {
-                    if (processor.shouldProcess(ct)) {
-                        processor.process(ct.toClass())
-//                        println ct.toClass()
-//                        classProcessorList.get(processor).add(ct.toClass());
+                    // DS Component name is the class name
+//                String componentName = ct.getName();
+                    println classProcessorList.size()
+                    for (ClassProcessor processor in classProcessorList.keySet()) {
+                        println ct.getName()
+                        println processor.shouldProcess(ct)
+                        if (processor.shouldProcess(ct)) {
+//                        processor.process(ct.toClass(), bundle.getHeaders())
+                            classProcessorList.get(processor).add(ct.toClass());
+                        }
                     }
-                }
 
 
-                for (ClassProcessor processor in classProcessorList.keySet()) {
-
-                    def get = classProcessorList.get(processor);
-                    if (get.size() > 0) {
-                        processor.process(get)
-                        classProcessorList.put(processor, new ArrayList<Class<?>>());
+                    for (ClassProcessor processor in classProcessorList.keySet()) {
+                        def get = classProcessorList.get(processor);
+                        if (get.size() > 0) {
+                            processor.process(get, bundle.getHeaders(), bundle)
+                            println "Process done"
+                            classProcessorList.put(processor, new ArrayList<Class<?>>());
+                        }
                     }
+
+
+                } catch (Exception e) {
+                    System.out.println("Error Bytecode Annotation parsing.");
+                    e.printStackTrace();
                 }
-
-
-            } catch (Exception e) {
-                System.out.println("Error Bytecode Annotation parsing.");
-                e.printStackTrace();
             }
         }
-//        }
         return bundle;
     }
 

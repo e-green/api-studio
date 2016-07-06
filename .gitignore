@@ -3,3 +3,5 @@ build
 .idea
 generated-sources
 *.class
+/dataserver/accumulo/
+/dataserver/cassandra/

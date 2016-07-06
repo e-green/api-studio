@@ -10,7 +10,9 @@ repositories {
 }
 jar {
     manifest {
-        attributes("Export-Package": "Gradle",
+        attributes(
+                "Api-Studio": "key",
+                "Export-Package": "Gradle",
                 "Bundle-Activator": "lk.egreen.msa.studio.sample.Helloworld")
     }
 }
@@ -19,6 +21,8 @@ dependencies {
     compile 'org.osgi:org.osgi.core:6.0.0'
     compile 'org.osgi:org.osgi.service.component:1.3.0'
     compile 'org.osgi:org.osgi.service.log:1.3.0'
+    compile 'org.osgi:osgi.cmpn:6.0.0'
+
     compile 'lk.egreen.msa.studio:core:1.0-SNAPSHOT'
 // https://mvnrepository.com/artifact/javax.ws.rs/javax.ws.rs-api
     // https://mvnrepository.com/artifact/org.glassfish.jersey.bundles/jaxrs-ri

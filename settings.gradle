@@ -1,5 +1,5 @@
 rootProject.name = 'studio'
 include 'bootstrap'
 include 'core'
-//include 'http-service'
+include 'grizzly-httpservice'
 
